@@ -48,7 +48,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: github-pages
           path: ./dist
 
   # Job for deploying the project
@@ -67,13 +67,6 @@ jobs:
       # Set up GitHub Pages
       - name: Setup Pages
         uses: actions/configure-pages@v4
-
-      # Download the build artifacts from the previous job
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: ./dist
 
       # Deploy the downloaded artifacts to GitHub Pages
       - name: Deploy to GitHub Pages
