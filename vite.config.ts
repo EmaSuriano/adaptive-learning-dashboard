@@ -2,8 +2,12 @@ import path from "path"
 import react from "@vitejs/plugin-react-swc"
 import { defineConfig } from "vite"
 
+const GH_REPO_PATH = "https://github.com/EmaSuriano/adaptive-learning-dashboard"
+
+const base = process.env.NODE_ENV === 'production' ? GH_REPO_PATH : ''
+
 export default defineConfig({
-  base: "https://github.com/EmaSuriano/adaptive-learning-dashboard"
+  base,
   plugins: [react()],
   resolve: {
     alias: {
