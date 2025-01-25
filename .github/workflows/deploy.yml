@@ -21,12 +21,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
+  # Job for building the project
+  build:
     runs-on: ubuntu-latest
     steps:
       # Checkout the repository
@@ -48,17 +44,34 @@ jobs:
       - name: Build
         run: yarn build
 
-      # Set up GitHub Pages
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
       # Upload the build artifacts to GitHub Pages
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: "./dist"
 
-      # Deploy the uploaded artifacts to GitHub Pages
+  # Job for deploying the project
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Set up GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      # Download the build artifacts from the previous job
+      - name: Download artifact
+        uses: actions/download-pages-artifact@v3
+
+      # Deploy the downloaded artifacts to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
