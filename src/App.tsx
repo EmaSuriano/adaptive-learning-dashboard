@@ -18,8 +18,10 @@ import {
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrendingUp, Book, Clock, Target, Brain } from 'lucide-react';
+import { LearningData } from './types';
 
-const LEARNING_DATA = {
+// Sample learning data
+const LEARNING_DATA: LearningData = {
   performanceHistory: Array.from({ length: 20 }, (_, i) => ({
     session: i + 1,
     performance: 0.5 + Math.random() * 0.3,
@@ -316,6 +318,5 @@ const LearningProgressDashboard = () => {
     </div>
   );
 };
-
 
 export default LearningProgressDashboard;
