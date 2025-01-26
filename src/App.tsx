@@ -15,7 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   TrendingUp,
@@ -29,6 +29,10 @@ import {
 import { LearningData } from "./types";
 import nightwind from "nightwind/helper";
 import { useState } from "react";
+import { ChatInterface } from "./ChatInterface";
+import UserSettingsDialog from "./SettingsDialog";
+import { Button } from "./components/ui/button";
+import { Menubar, Separator } from "@radix-ui/react-menubar";
 
 // Sample learning data
 const LEARNING_DATA: LearningData = {
@@ -69,12 +73,39 @@ const LEARNING_DATA: LearningData = {
     ],
   },
 };
+
 const LearningProgressDashboard = () => {
+  return (
+    <div className="bg-slate-100 text-slate-800">
+      <div className="w-full max-w-4xl mx-auto p-4 space-y-4">
+        <Card className="border-none bg-transparent shadow-none">
+          <CardHeader className="p-0">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Brain className="w-8 h-8" />
+                Language Learning Progress Dashboard
+              </CardTitle>
+
+              <div className="flex">
+                <UserSettingsDialog />
+                <ThemeSwitcher />
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        <ChatInterface />
+
+        {/* <Dashboard learningData={LEARNING_DATA} /> */}
+      </div>
+    </div>
+  );
+};
+
+const ThemeSwitcher = () => {
   const [theme, setTheme] = useState(
     window.localStorage.getItem("nightwind-mode"),
   );
-
-  const learningData = LEARNING_DATA;
 
   const changeTheme = () => {
     nightwind.toggle();
@@ -82,274 +113,259 @@ const LearningProgressDashboard = () => {
   };
 
   return (
-    <div className="bg-slate-100 text-slate-800">
-      <div className="w-full max-w-6xl mx-auto p-4 space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Brain className="w-8 h-8" />
-            Language Learning Progress Dashboard
-          </h1>
+    <Button size="icon" onClick={changeTheme}>
+      {theme === "dark" ? (
+        <Sun className="h-5 w-5" />
+      ) : (
+        <Moon className="h-5 w-5" />
+      )}
+    </Button>
+  );
+};
 
-          <button onClick={changeTheme} aria-label="Change Theme">
-            {theme === "dark" ? (
-              <Sun className="w-8 h-8" />
-            ) : (
-              <Moon className="w-8 h-8" />
-            )}
-          </button>
+const Dashboard = ({ learningData }: { learningData: LearningData }) => {
+  return (
+    <Tabs defaultValue="overview" className="w-full">
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="overview" className="flex items-center gap-2">
+          <TrendingUp className="w-4 h-4" />
+          Overview
+        </TabsTrigger>
+        <TabsTrigger value="concepts" className="flex items-center gap-2">
+          <Book className="w-4 h-4" />
+          Concepts
+        </TabsTrigger>
+        <TabsTrigger value="time" className="flex items-center gap-2">
+          <Clock className="w-4 h-4" />
+          Time Analysis
+        </TabsTrigger>
+        <TabsTrigger value="path" className="flex items-center gap-2">
+          <Target className="w-4 h-4" />
+          Learning Path
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="overview">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Performance Trend</h3>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={learningData.performanceHistory}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="session" />
+                  <YAxis domain={[0, 1]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="performance"
+                    stroke="#8884d8"
+                    name="Actual Performance"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="expectedPerformance"
+                    stroke="#82ca9d"
+                    name="Expected Performance"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">
+                Concept Mastery Overview
+              </h3>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart
+                  data={[
+                    ...Object.entries(
+                      learningData.conceptMastery.vocabulary,
+                    ).map(([key, value]) => ({
+                      concept: key,
+                      mastery: value,
+                      type: "vocabulary",
+                    })),
+                    ...Object.entries(learningData.conceptMastery.grammar).map(
+                      ([key, value]) => ({
+                        concept: key,
+                        mastery: value,
+                        type: "grammar",
+                      }),
+                    ),
+                  ]}
+                >
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="concept" />
+                  <PolarRadiusAxis domain={[0, 1]} />
+                  <Radar
+                    name="Concept Mastery"
+                    dataKey="mastery"
+                    stroke="#8884d8"
+                    fill="#8884d8"
+                    fillOpacity={0.6}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </div>
+      </TabsContent>
 
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="concepts" className="flex items-center gap-2">
-              <Book className="w-4 h-4" />
-              Concepts
-            </TabsTrigger>
-            <TabsTrigger value="time" className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Time Analysis
-            </TabsTrigger>
-            <TabsTrigger value="path" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              Learning Path
-            </TabsTrigger>
-          </TabsList>
+      <TabsContent value="concepts">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Vocabulary Mastery</h3>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={Object.entries(
+                    learningData.conceptMastery.vocabulary,
+                  ).map(([key, value]) => ({
+                    concept: key,
+                    mastery: value,
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="concept" />
+                  <YAxis domain={[0, 1]} />
+                  <Tooltip />
+                  <Bar dataKey="mastery" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="overview">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold">Performance Trend</h3>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={learningData.performanceHistory}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="session" />
-                      <YAxis domain={[0, 1]} />
-                      <Tooltip />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="performance"
-                        stroke="#8884d8"
-                        name="Actual Performance"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="expectedPerformance"
-                        stroke="#82ca9d"
-                        name="Expected Performance"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Grammar Mastery</h3>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={Object.entries(learningData.conceptMastery.grammar).map(
+                    ([key, value]) => ({
+                      concept: key,
+                      mastery: value,
+                    }),
+                  )}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="concept" />
+                  <YAxis domain={[0, 1]} />
+                  <Tooltip />
+                  <Bar dataKey="mastery" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
 
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold">
-                    Concept Mastery Overview
-                  </h3>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <RadarChart
-                      data={[
-                        ...Object.entries(
-                          learningData.conceptMastery.vocabulary,
-                        ).map(([key, value]) => ({
-                          concept: key,
-                          mastery: value,
-                          type: "vocabulary",
-                        })),
-                        ...Object.entries(
-                          learningData.conceptMastery.grammar,
-                        ).map(([key, value]) => ({
-                          concept: key,
-                          mastery: value,
-                          type: "grammar",
-                        })),
-                      ]}
-                    >
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="concept" />
-                      <PolarRadiusAxis domain={[0, 1]} />
-                      <Radar
-                        name="Concept Mastery"
-                        dataKey="mastery"
-                        stroke="#8884d8"
-                        fill="#8884d8"
-                        fillOpacity={0.6}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+      <TabsContent value="time">
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold">Time vs Success Analysis</h3>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={learningData.timeAnalysis}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="concept" />
+                <YAxis yAxisId="left" domain={[0, 150]} />
+                <YAxis yAxisId="right" orientation="right" domain={[0, 1]} />
+                <Tooltip />
+                <Legend />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="averageTime"
+                  stroke="#8884d8"
+                  name="Average Time (seconds)"
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="successRate"
+                  stroke="#82ca9d"
+                  name="Success Rate"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </TabsContent>
 
-          <TabsContent value="concepts">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold">Vocabulary Mastery</h3>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart
-                      data={Object.entries(
-                        learningData.conceptMastery.vocabulary,
-                      ).map(([key, value]) => ({
-                        concept: key,
-                        mastery: value,
-                      }))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="concept" />
-                      <YAxis domain={[0, 1]} />
-                      <Tooltip />
-                      <Bar dataKey="mastery" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+      <TabsContent value="path">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Current Progress</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500">Current Level</p>
+                  <p className="text-2xl font-bold">
+                    {learningData.learningPath.currentLevel}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Level Progress</p>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div
+                      className="bg-blue-600 h-2.5 rounded-full"
+                      style={{
+                        width: `${learningData.learningPath.progress * 100}%`,
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold">Grammar Mastery</h3>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart
-                      data={Object.entries(
-                        learningData.conceptMastery.grammar,
-                      ).map(([key, value]) => ({
-                        concept: key,
-                        mastery: value,
-                      }))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="concept" />
-                      <YAxis domain={[0, 1]} />
-                      <Tooltip />
-                      <Bar dataKey="mastery" fill="#82ca9d" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="time">
-            <Card>
-              <CardHeader>
-                <h3 className="text-lg font-semibold">
-                  Time vs Success Analysis
-                </h3>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={learningData.timeAnalysis}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="concept" />
-                    <YAxis yAxisId="left" domain={[0, 150]} />
-                    <YAxis
-                      yAxisId="right"
-                      orientation="right"
-                      domain={[0, 1]}
-                    />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey="averageTime"
-                      stroke="#8884d8"
-                      name="Average Time (seconds)"
-                    />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="successRate"
-                      stroke="#82ca9d"
-                      name="Success Rate"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="path">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold">Current Progress</h3>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Recent Topics</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {learningData.learningPath.recentTopics.map((topic, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
                     <div>
-                      <p className="text-sm text-gray-500">Current Level</p>
-                      <p className="text-2xl font-bold">
-                        {learningData.learningPath.currentLevel}
+                      <p className="font-medium">{topic.name}</p>
+                      <p className="text-sm text-gray-500 capitalize">
+                        {topic.status.replace("_", " ")}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Level Progress</p>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div
-                          className="bg-blue-600 h-2.5 rounded-full"
-                          style={{
-                            width: `${learningData.learningPath.progress * 100}%`,
-                          }}
-                        ></div>
+                    {topic.status !== "pending" && (
+                      <div className="text-right">
+                        <p className="font-bold">
+                          {(topic.score * 100).toFixed(0)}%
+                        </p>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold">Recent Topics</h3>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {learningData.learningPath.recentTopics.map(
-                      (topic, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between"
-                        >
-                          <div>
-                            <p className="font-medium">{topic.name}</p>
-                            <p className="text-sm text-gray-500 capitalize">
-                              {topic.status.replace("_", " ")}
-                            </p>
-                          </div>
-                          {topic.status !== "pending" && (
-                            <div className="text-right">
-                              <p className="font-bold">
-                                {(topic.score * 100).toFixed(0)}%
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ),
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 };
 
